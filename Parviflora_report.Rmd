@@ -1,0 +1,79 @@
+---
+title: "Summary Report of Sales for Parviflora Stores"
+subtitle: "Data was gathered from system generated files for input period"
+date: "Generated: `r format(Sys.time(), '%d %B, %Y')` "
+output: 
+  html_document:
+    df_print: paged
+---
+
+```{r setup, include=FALSE}
+
+daff <- read_rds("data/processed/integrated_data.rds")
+flower_analysis <- read_rds("data/processed/tidy_data.rds")
+source(list.files(pattern = "4_analysis*.R$", recursive = TRUE))
+# get header used later
+p <- get_period_header(daff)
+```
+
+## Stores Analysis
+##
+#### Top 3 Stores in terms of revenue `r p` were: 
+
+``` {r top_revenue_stores_text, echo=FALSE}
+daff %>% select(store_name, month, rev_total) %>% group_by(store_name) %>% summarise(`Total Revenue` = sum(rev_total)) %>% arrange(desc(`Total Revenue`)) %>% head(3)
+
+```
+
+```{r top_revenue_stores_bar11, fig.show="hold", out.width="50%", echo=FALSE}
+
+horizontal_bar_stores(daff, period = p, save=FALSE)
+horizontal_bar_stores_counts(daff, p, save = FALSE)
+
+```
+
+### Store performance relative to mean
+The horizontal axis indicates how many standard deviations from the mean is the store's revenue
+
+```{r norm_rev_stores, echo=FALSE}
+diverging_bar_stores(daff, save=FALSE)
+```
+
+### Flower composition varies between the stores
+``` {r flower_composition, echo= FALSE}
+flower_composition(flower_analysis, p, save = FALSE)
+
+```
+
+```{r top_revenue_stores_bar1, fig.show="hold", out.width="50%", echo=FALSE}
+bar_tot_flower(flower_analysis, p, what = "rev", save = FALSE)
+bar_tot_flower(flower_analysis, p, what = "count", save = FALSE)
+```
+
+### Monthly revenues of Parviflora
+``` {r monthly_rev_total, echo= FALSE}
+Kuba_plot(daff, save = FALSE)
+```
+
+### 
+``` {r adsa, fig.show="hold", out.width="50%", echo = FALSE}
+bar_flower_month(flower_analysis, p, daf = TRUE, save = FALSE)
+sep_flow_count(flower_analysis, p, save = FALSE)
+```
+
+### What is the revenue per order for each flower type
+```{r bar_order, echo=FALSE}
+bar_order_flower(flower_analysis, save=FALSE)
+scatter_count_rev(flower_analysis, p, save=FALSE)
+hist_mean_order(flower_analysis, save=FALSE)
+```
+
+
+#### Stores without Store ID in Stores file but present in Daffodils system file: 
+```{r missing_in_stores, echo=FALSE}
+# This part of the code will not work if .Rmd file is run separately not from main script
+# We would need to save the df_complete data.frame and then load it from .Rds file
+df_complete %>% select(store_name, store_id) %>% filter(store_name == 'unknown' & 
+                                                        store_id != 0) %>% rename("Store ID (Daffodils System)"=store_id)
+```
+
